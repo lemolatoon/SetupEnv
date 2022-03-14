@@ -68,6 +68,9 @@ def operation_with_bash():
     # install packages from package manager
     install_packages(pkg)
 
+    # configure some packages
+    configure_package()
+
     # install fish, which will replace bash in this environment
     install_fish(pkg)
 
@@ -112,6 +115,9 @@ def install_packages(pkg: str):
     elif pkg == "pacman":
         for pkg in packages:
             run(f"pacman -S {pkg}")
+
+def configure_package():
+    run("git config --global core.editor nvim")
 
 def install_fish(pkg):
     print_b("Installing fish and configuring...")
