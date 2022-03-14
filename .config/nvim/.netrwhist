@@ -1,7 +1,0 @@
-let g:netrw_dirhistmax  =10
-let g:netrw_dirhistcnt =5
-let g:netrw_dirhist_5='/home/lemolatoon/osbook/day01'
-let g:netrw_dirhist_4='/home/lemolatoon/assembler/link/assembly_practice/.git'
-let g:netrw_dirhist_3='/home/lemolatoon/lemola_os/lemola_os/tests'
-let g:netrw_dirhist_2='/home/lemolatoon/lemola_os/lemola_os'
-let g:netrw_dirhist_1='/home/lemolatoon/lemola_os/lemola_os/src'
