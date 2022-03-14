@@ -14,15 +14,7 @@ def main():
         print_b("You are using fish")
     else:
         print_b("You might be using bash")
-    current_dir: str = os.getcwd()
 
-    # test
-    print(f"current directory is : {os.getcwd()}")
-    os.chdir("..")
-    print(f"current directory is : {os.getcwd()}")
-    os.chdir(current_dir)
-    print(f"current directory is : {os.getcwd()}")
-    print(f"script directory is : {__file__}")
 
     if not is_fish:
         print_b("copy config files")
