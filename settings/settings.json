@@ -38,4 +38,28 @@
     "workbench.colorTheme": "Default Dark+",
     "editor.formatOnSave": true,
     "terminal.integrated.enableMultiLinePasteWarning": false,
+    // ----------- when you change your back ground ---------------
+    // C:\\Users\\{name}\\AppData\\Local\\Programs\\Misrosoft\ VS\ Code\\resources\\app\\out\\vs\\workbench\\workbench.desktop.main.css
+    // ↓
+    // .monaco-workbench .part.editor {
+    //     background: url('background.png') no-repeat;
+    //     background-size: cover;
+    // }
+    // .monaco-editor,
+    // .monaco-editor .inputarea {
+    //     background: none;
+    // }
+    // .monaco-editor.vs {
+    //     background: none;
+    // }
+    // .monaco-editor.vs-dark {
+    //     background: none;
+    // }
+    // ---------------- setting.json ---------------------------------
+    // ↓
+    // "workbench.colorCustomizations": {
+    //     "editor.background": "#12121230",
+    //     "terminal.background": "#262626ff",
+    // },
+    // ----------------------------------------------------------------
 }
