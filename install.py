@@ -12,6 +12,12 @@ script_dir.pop(length - 1)
 script_dir = "/".join(script_dir)
 
 def main():
+    if len(sys.argv) >= 2:
+        if sys.argv[1] == "--all" or sys.argv[1] == "--a":
+            all()
+        else:
+            show_help()
+
     is_fish = using_fish()
     if is_fish:
         print_b("You are using fish")
@@ -20,8 +26,7 @@ def main():
 
 
     if not is_fish:
-        print_b("copy config files")
-        sh.direct(f"fish .{script_dir}/src/copy_config.sh")
+        sh.copy_config(script_dir)
         operation_with_bash()
     else:
         operation_with_fish()
@@ -39,6 +44,20 @@ def using_fish() -> bool:
             return False
     
 
+def all():
+    sh.copy_config(script_dir)
+    operation_with_bash(all = True)
+    operation_with_fish(all = True)
+    sh.direct("exec fish")
+    sys.exit(0)
+
+def show_help():
+    print(
+        f"""Unsupported args: {sys.argv}\n
+            help:
+                --all, --a: Install all automatically by using apt"""
+    )
+    sys.exit(0)
 
 
 if __name__ == "__main__":

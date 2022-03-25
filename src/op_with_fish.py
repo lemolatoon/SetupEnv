@@ -8,7 +8,7 @@ length = len(script_dir)
 script_dir.pop(length - 1)
 script_dir = "/".join(script_dir)
 
-def operation_with_fish():
+def operation_with_fish(all: bool = False):
     configure_bobthefish()
     install_powerline()
 

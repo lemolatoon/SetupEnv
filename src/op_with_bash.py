@@ -1,10 +1,11 @@
+import sys
 from src.util import print_b
 import src.shell as sh
 import os
 
-def operation_with_bash():
+def operation_with_bash(all: bool = False):
     # select package manager
-    pkg = select_package_manager()
+    pkg = select_package_manager(all)
 
     # update package manager
     update_package_manager(pkg)
@@ -21,15 +22,21 @@ def operation_with_bash():
     # write `exec fish` at the end of $HOME/.bashrc
     configure_fish()
 
+    if all:
+        return
+
     print()
     print("Make sure sh.run `\033[33msource ~/.bashrc\033[0m`, then fish will be launched")
     print("After that, sh.run \033[33mthis script\033[0m again")
 
 
-def select_package_manager() -> str:
+def select_package_manager(all=False) -> str:
+    if all:
+        return "apt"
+
     ans = ""
     pkg_mgr_list = ["apt", "pacman"]
-    index: int = 0;
+    index: int = 0
     while ans != 'y' and ans != 'Y':
         print(f"Are you using Package Manager: \033[33m{pkg_mgr_list[index]}\033[0m? [Y/N]: ", end="")
         ans: str = input()
@@ -45,7 +52,7 @@ def select_package_manager() -> str:
 def update_package_manager(pkg: str):
     print_b("Updating package manager")
     if pkg == "apt":
-        sh.direct("sudo apt-get update")
+        sh.direct("sudo apt-get update -y")
         sh.direct("sudo apt-get upgrade -y")
     elif pkg == "pacman":
         sh.run("sudo pacman -g")

@@ -2,6 +2,8 @@ import subprocess
 import sys
 import os
 
+from src.util import print_b
+
 def run(cmd: str) -> str:
     print()
     try:
@@ -43,3 +45,7 @@ def run_as_fish(s: str):
 
 def direct(s: str):
     os.system(s)
+
+def copy_config(script_dir: str):
+    print_b("copy config files")
+    direct(f"bash .{script_dir}/src/copy_config.sh")
