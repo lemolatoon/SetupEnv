@@ -3,7 +3,8 @@ cd $script_dir/..
 
 
 # config files
-cp ./configs/* $HOME/ -iv
+mkdir $HOME/.config -p
+cp ./configs/.* $HOME/ -iv
 echo "single files are ok."
 cp ./configs/.config/* $HOME/.config -irv
 echo "files under .config are ok."
