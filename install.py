@@ -10,6 +10,8 @@ script_dir = script_dir.split("/")
 length = len(script_dir)
 script_dir.pop(length - 1)
 script_dir = "/".join(script_dir)
+print_b(script_dir)
+
 
 def main():
     if len(sys.argv) >= 2:

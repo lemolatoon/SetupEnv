@@ -48,4 +48,4 @@ def direct(s: str):
 
 def copy_config(script_dir: str):
     print_b("copy config files")
-    direct(f"bash .{script_dir}/src/copy_config.sh")
+    direct(f"bash {script_dir}/src/copy_config.sh")
