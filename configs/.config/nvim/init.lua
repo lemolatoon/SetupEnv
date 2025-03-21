@@ -1,5 +1,3 @@
-vim.cmd('source ~/.vimrc')
-
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
@@ -22,6 +20,8 @@ vim.opt.rtp:prepend(lazypath)
 -- This is also a good place to setup other settings (vim.opt)
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
+
+vim.cmd('source ~/.vimrc')
 
 -- Setup lazy.nvim
 require("lazy").setup({
@@ -55,6 +55,7 @@ require("lazy").setup({
 				})
 
 				lspconfig.mlir_lsp_server.setup({})
+        lspconfig.pyright.setup {}
        end,
      },
  		{
@@ -82,18 +83,6 @@ require("lazy").setup({
 						completeopt = 'menu,menuone,noselect',
 					}
  				})
-
-				-- for :e complition
-				-- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
-				cmp.setup.cmdline(':', {
-					mapping = cmp.mapping.preset.cmdline(),
-					sources = cmp.config.sources({
-						{ name = 'path' }
-					}, {
-						{ name = 'cmdline' }
-					}),
-					matching = { disallow_symbol_nonprefix_matching = false }
-				})
  			end,
  		},
   },
@@ -144,6 +133,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		buf_map('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'LSP Code Action' })
 		-- 定義ジャンプ用のキーバインド
 		vim.keymap.set('n', 'gD', vim.lsp.buf.definition, { desc = 'Go to definition' })
+    vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = ''})
 		if client.server_capabilities.inlayHintProvider then
 			vim.lsp.inlay_hint.enable(true)
 		end
