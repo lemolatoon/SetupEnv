@@ -6,3 +6,5 @@ set expandtab
 
 set smartindent
 set number
+
+set wildmode=list:longest
