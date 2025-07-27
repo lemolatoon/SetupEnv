@@ -133,9 +133,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		buf_map('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'LSP Code Action' })
 		-- 定義ジャンプ用のキーバインド
 		vim.keymap.set('n', 'gD', vim.lsp.buf.definition, { desc = 'Go to definition' })
-    vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = ''})
-    -- エラーメッセージ
-    vim.keymap.set('n', '<leader>cd', vim.diagnostic.open_float, { desc = 'Line Diagnostics'})
+		vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { desc = 'Rename symbol'})
+		-- エラーメッセージ
+		vim.keymap.set('n', '<leader>cd', vim.diagnostic.open_float, { desc = 'Line Diagnostics'})
 		if client.server_capabilities.inlayHintProvider then
 			vim.lsp.inlay_hint.enable(true)
 		end
