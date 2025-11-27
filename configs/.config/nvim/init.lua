@@ -31,6 +31,10 @@ require("lazy").setup({
 			"neovim/nvim-lspconfig",
 			config = function()
 				local lspconfig = require("lspconfig")
+				-- Let LSP advertise nvim-cmp completion capabilities (incl. snippet support)
+				local capabilities = require("cmp_nvim_lsp").default_capabilities(
+					vim.lsp.protocol.make_client_capabilities()
+				)
 				lspconfig.clangd.setup({
 					cmd = { "clangd", "--background-index", "--clang-tidy", "--inlay-hints" },
 					filetypes = { "c", "cpp", "objc", "objcpp" },
@@ -42,6 +46,7 @@ require("lazy").setup({
 							".git"
 						)(fname) or vim.loop.os_homedir()
 					end,
+					capabilities = capabilities,
 					settings = {
 						clangd = {
 							inlayHints = {
@@ -54,8 +59,56 @@ require("lazy").setup({
 					},
 				})
 
-				lspconfig.mlir_lsp_server.setup({})
-				lspconfig.pyright.setup({})
+				lspconfig.mlir_lsp_server.setup({ capabilities = capabilities })
+				-- lspconfig.pyright.setup({})
+
+				-- Use jedi-language-server with the project's .venv Python
+				lspconfig.jedi_language_server.setup({
+					cmd = { "jedi-language-server" },
+					capabilities = capabilities,
+					root_dir = function(fname)
+						return require("lspconfig.util").root_pattern(
+							".git",
+							"pyproject.toml",
+							"setup.cfg",
+							"setup.py",
+							"requirements.txt",
+							".venv"
+						)(fname) or vim.loop.os_homedir()
+					end,
+					init_options = {
+						workspace = {
+							-- default; updated per project in on_new_config
+							environmentPath = vim.fn.getcwd() .. "/.venv",
+						},
+						completion = {
+							-- Some clients need eager resolve to surface items; keep snippets off for simpler cmp setup
+							disableSnippets = true,
+							resolveEagerly = true,
+						},
+					},
+					on_new_config = function(new_config, new_root_dir)
+						local root = new_root_dir or vim.fn.getcwd()
+						local venv = root .. "/.venv"
+						local venv_python = venv .. "/bin/python"
+						local venv_jls = venv .. "/bin/jedi-language-server"
+						if vim.loop.fs_stat(venv_python) then
+							-- jedi expects the venv root; it appends /bin/python internally
+							new_config.init_options.workspace.environmentPath = venv
+							if vim.loop.fs_stat(venv_jls) then
+								new_config.cmd = { venv_jls }
+							end
+						elseif vim.env.VIRTUAL_ENV and vim.loop.fs_stat(vim.env.VIRTUAL_ENV .. "/bin/python") then
+							new_config.init_options.workspace.environmentPath = vim.env.VIRTUAL_ENV
+							if vim.loop.fs_stat(vim.env.VIRTUAL_ENV .. "/bin/jedi-language-server") then
+								new_config.cmd = { vim.env.VIRTUAL_ENV .. "/bin/jedi-language-server" }
+							end
+						else
+							-- fall back to system python; give its directory so jedi can resolve bin/python
+							new_config.init_options.workspace.environmentPath = vim.fn.fnamemodify(vim.fn.exepath("python3"), ":h:h")
+						end
+					end,
+				})
 			end,
 		},
 		{
@@ -68,11 +121,22 @@ require("lazy").setup({
 			},
 			config = function()
 				local cmp = require("cmp")
+				vim.o.completeopt = "menu,menuone,noselect"
 				cmp.setup({
+					snippet = {
+						-- Minimal snippet support so LSP items with snippets can expand
+						expand = function(args)
+							if vim.snippet then
+								vim.snippet.expand(args.body)
+							end
+						end,
+					},
 					mapping = {
 						["<Tab>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
 						["<S-Tab>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
 						["<CR>"] = cmp.mapping.confirm({ select = true }),
+						["<C-Space>"] = cmp.mapping.complete(),
+						["<C-e>"] = cmp.mapping.abort(),
 					},
 					sources = {
 						{ name = "nvim_lsp" },
@@ -95,6 +159,7 @@ require("lazy").setup({
 					server = {
 						-- rust-analyzer の設定をここに書く
 						cmd = { "rust-analyzer" },
+						capabilities = require("cmp_nvim_lsp").default_capabilities(),
 						settings = {
 							["rust-analyzer"] = {
 								cargo = { allFeatures = true },
@@ -143,6 +208,7 @@ require("lspconfig").clangd.setup({
 			".git"
 		)(fname) or vim.loop.os_homedir()
 	end,
+	capabilities = require("cmp_nvim_lsp").default_capabilities(vim.lsp.protocol.make_client_capabilities()),
 	settings = {
 		clangd = {
 			inlayHints = {
