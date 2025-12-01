@@ -32,7 +32,7 @@ vim.opt.rtp:prepend(lazypath)
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
--- 必要なら昔の設定も流用
+-- ここはそのまま（ただし、古い LSP 設定が .vimrc にあると競合する可能性はあります）
 vim.cmd("source ~/.vimrc")
 
 -----------------------------------------------------------
@@ -45,7 +45,7 @@ require("lazy").setup({
     -------------------------------------------------------
     {
       "mason-org/mason.nvim",
-      opts = {}, -- README 推奨の素の設定で十分 
+      opts = {}, -- README 推奨の素の設定で十分
     },
 
     -------------------------------------------------------
@@ -55,14 +55,14 @@ require("lazy").setup({
       "mason-org/mason-lspconfig.nvim",
       dependencies = { "mason-org/mason.nvim", "neovim/nvim-lspconfig" },
       opts = {
-        -- よく使う LSP を自動インストール
         ensure_installed = {
           "clangd",
           "basedpyright",
           "rust_analyzer",
         },
         -- automatic_enable はデフォルト true:
-        -- インストール済みサーバを vim.lsp.enable() で自動起動してくれる 
+        -- インストール済みサーバを vim.lsp.enable() で自動起動
+        -- automatic_enable = true,
       },
     },
 
@@ -71,11 +71,17 @@ require("lazy").setup({
     -------------------------------------------------------
     {
       "neovim/nvim-lspconfig",
-      -- cmp_nvim_lsp を先にロードして capabilities を作る
       dependencies = { "hrsh7th/cmp-nvim-lsp" },
       config = function()
-        -- LSP completion capabilities (nvim-cmp 連携)
+        ---------------------------------------------------
+        -- 共通 capabilities（nvim-cmp 連携）
+        ---------------------------------------------------
         local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+        -- すべての LSP 設定にマージされる共通設定
+        vim.lsp.config("*", {
+          capabilities = capabilities,
+        })
 
         ---------------------------------------------------
         -- C / C++: clangd
@@ -83,7 +89,6 @@ require("lazy").setup({
         vim.lsp.config("clangd", {
           cmd = { "clangd", "--background-index", "--clang-tidy", "--inlay-hints" },
           filetypes = { "c", "cpp", "objc", "objcpp" },
-          capabilities = capabilities,
           settings = {
             clangd = {
               inlayHints = {
@@ -97,63 +102,90 @@ require("lazy").setup({
         })
 
         ---------------------------------------------------
-        -- Rust: mason 管理の rust_analyzer をそのまま利用
-        -- （特別な設定を足さず capabilities だけ乗せる）
+        -- Rust: rust_analyzer
         ---------------------------------------------------
         vim.lsp.config("rust_analyzer", {
-          capabilities = capabilities,
           -- 必要になったら settings をここに追加
+          -- settings = {
+          --   ["rust-analyzer"] = { ... },
+          -- },
         })
 
         ---------------------------------------------------
-        -- Python: pyright + プロジェクト直下 .venv の自動使用
+        -- Python: basedpyright + プロジェクト直下 .venv の自動使用
         ---------------------------------------------------
-        -- basedpyright/pyright のドキュメントでは、
-        -- .venv がプロジェクト root にある場合にその環境を
-        -- pythonPath として使えることが説明されています。
         vim.lsp.config("basedpyright", {
-          capabilities = capabilities,
+          -- basedpyright ドキュメント準拠の settings 構造
           settings = {
-            python = {
-              -- pythonPath は on_new_config で上書き
+            basedpyright = {
+              analysis = {
+                -- 元の pyright 用設定を basedpyright.analysis.* に移行
+                autoSearchPaths = true,
+                useLibraryCodeForTypes = true,
+                autoImportCompletions = true,
+                typeCheckingMode = "standard",
+                -- 必要なら：
+                diagnosticMode = "workspace", -- 大規模プロジェクトで全体を診断したい場合
+              },
             },
-            analysis = {
-              autoSearchPaths = true,
-              useLibraryCodeForTypes = true,
-              autoImportCompletions = true,
+            -- python.* は pythonPath / venvPath だけ有効
+            python = {
+              -- pythonPath は before_init で上書き
             },
           },
-          -- プロジェクト root ごとに .venv を検出して pythonPath に設定
-          on_new_config = function(new_config, new_root_dir)
-            local root = new_root_dir or vim.fn.getcwd()
 
-            -- OS 判定して venv 内の python を決める
-            local python_path
-            if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
-              python_path = root .. "\\.venv\\Scripts\\python.exe"
-            else
-              python_path = root .. "/.venv/bin/python"
-            end
+          -- -- .venv をプロジェクト階層から探して python.pythonPath に設定
+          -- -- （vim.lsp.config での on_new_config は扱いが微妙なので before_init で行う）
+          -- before_init = function(_, config)
+          --   -- 現在のバッファから上方向に .venv ディレクトリを探す
+          --   local bufname = vim.api.nvim_buf_get_name(0)
+          --   if bufname == "" then
+          --     return
+          --   end
 
-            if uv.fs_stat(python_path) then
-              new_config.settings = new_config.settings or {}
-              new_config.settings.python = new_config.settings.python or {}
-              -- Qiita 記事の例の通り pythonPath を設定 
-              new_config.settings.python.pythonPath = python_path
-            end
-          end,
+          --   local start_dir = vim.fs.dirname(bufname)
+          --   local venv_dirs = vim.fs.find(".venv", {
+          --     path = start_dir,
+          --     upward = true,
+          --     type = "directory",
+          --   })
+          --   local venv_dir = venv_dirs[1]
+          --   if not venv_dir then
+          --     return
+          --   end
+
+          --   local python_path
+          --   if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+          --     python_path = venv_dir .. "\\Scripts\\python.exe"
+          --   else
+          --     python_path = venv_dir .. "/bin/python"
+          --   end
+
+          --   if not uv.fs_stat(python_path) then
+          --     return
+          --   end
+
+          --   config.settings = config.settings or {}
+          --   config.settings.python = config.settings.python or {}
+          --   config.settings.python.pythonPath = python_path
+          -- end,
         })
 
         ---------------------------------------------------
-        -- MLIR: mlir_lsp_server（これは mason ではなく自前インストール想定）
+        -- MLIR: mlir_lsp_server
         ---------------------------------------------------
-        vim.lsp.config("mlir_lsp_server", {
-          capabilities = capabilities,
-          -- cmd や filetypes は nvim-lspconfig 側のデフォルトを使用
-        })
+        if vim.fn.executable("mlir-lsp-server") == 1 then
+          vim.lsp.config("mlir_lsp_server", {
+            -- capabilities は "*" 側で共通設定済みなら省略可
+            -- 何か個別の設定を足したいならここに書く
+            -- settings = { },
+          })
 
-        -- mlir_lsp_server は mason 管理ではないので自前で enable
-        vim.lsp.enable("mlir_lsp_server")
+          vim.lsp.enable("mlir_lsp_server")
+        else
+          -- 静かに無視したいならこの print は消してOK
+          vim.notify("mlir-lsp-server not found in PATH, skipping mlir_lsp_server LSP", vim.log.levels.DEBUG)
+        end
 
         ---------------------------------------------------
         -- 共通 LSP キーマップ & Inlay Hints
@@ -183,9 +215,9 @@ require("lazy").setup({
             -- 行単位診断
             buf_map("n", "<leader>cd", vim.diagnostic.open_float, "Line Diagnostics")
 
-            -- Inlay Hints (0.10+ の API)
+            -- Inlay Hints
             if client.server_capabilities.inlayHintProvider then
-              vim.lsp.inlay_hint.enable(true, { bufnr = bufnr }) -- 
+              vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
             end
           end,
         })
@@ -209,7 +241,6 @@ require("lazy").setup({
 
         cmp.setup({
           snippet = {
-            -- シンプルに vim.snippet があれば使う
             expand = function(args)
               if vim.snippet then
                 vim.snippet.expand(args.body)
@@ -234,6 +265,16 @@ require("lazy").setup({
         })
       end,
     },
+    -------------------------------------------------------
+    -- LSP progress 表示 (任意だけどオススメ)
+    -------------------------------------------------------
+    {
+      "j-hui/fidget.nvim",
+      opts = {
+        -- とりあえずデフォルトでOK
+      },
+    },
+
   },
 
   ---------------------------------------------------------
@@ -242,6 +283,7 @@ require("lazy").setup({
   install = { colorscheme = { "habamax" } },
   checker = { enabled = true }, -- プラグイン更新チェック
 })
+vim.lsp.set_log_level("debug")
 
 -----------------------------------------------------------
 -- Colorscheme
