@@ -188,6 +188,19 @@ require("lazy").setup({
         end
 
         ---------------------------------------------------
+        -- TableGen: tblgen_lsp_server
+        ---------------------------------------------------
+        if vim.fn.executable("tblgen-lsp-server") == 1 then
+          vim.lsp.config("tblgen_lsp_server", {
+          })
+
+          vim.lsp.enable("tblgen_lsp_server")
+        else
+          -- 静かに無視したいならこの print は消してOK
+          vim.notify("tblgen-lsp-server not found in PATH, skipping tblgen_lsp_server LSP", vim.log.levels.DEBUG)
+        end
+
+        ---------------------------------------------------
         -- 共通 LSP キーマップ & Inlay Hints
         ---------------------------------------------------
         vim.api.nvim_create_autocmd("LspAttach", {
