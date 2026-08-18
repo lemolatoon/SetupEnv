@@ -5,15 +5,36 @@ PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
 export PATH
 unset AEROSPACE_WINDOW_ID AEROSPACE_WORKSPACE
 
-target_workspace=$1
-
-case "$target_workspace" in
-    [1-9]) ;;
-    *) exit 2 ;;
-esac
+destination=${1:-}
 
 current_workspace=$(aerospace list-workspaces --focused --format '%{workspace}')
 current_monitor=$(aerospace list-workspaces --focused --format '%{monitor-id}')
+
+case "$destination" in
+    [1-9])
+        target_workspace=$destination
+        ;;
+    prev|next)
+        monitor_count=$(aerospace list-monitors --count)
+        case "$current_monitor" in ''|*[!0-9]*) exit 1 ;; esac
+        case "$monitor_count" in ''|*[!0-9]*) exit 1 ;; esac
+        [ "$monitor_count" -gt 1 ] || exit 0
+
+        if [ "$destination" = next ]; then
+            target_monitor=$((current_monitor % monitor_count + 1))
+        else
+            target_monitor=$(( (current_monitor + monitor_count - 2) % monitor_count + 1 ))
+        fi
+
+        target_workspace=$(
+            aerospace list-workspaces --monitor "$target_monitor" --visible \
+                --format '%{workspace}'
+        )
+        [ -n "$target_workspace" ] || exit 1
+        ;;
+    *) exit 2 ;;
+esac
+
 target_monitor=$(
     aerospace list-workspaces --all --format '%{workspace}|%{monitor-id}' |
         awk -F '|' -v workspace="$target_workspace" '$1 == workspace { print $2; exit }'

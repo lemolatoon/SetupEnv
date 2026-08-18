@@ -111,6 +111,10 @@ on-window-detected = [
     alt-shift-leftSquareBracket = 'move-workspace-to-monitor --wrap-around prev'
     alt-shift-rightSquareBracket = 'move-workspace-to-monitor --wrap-around next'
 
+    # Swap the visible workspaces between the focused and adjacent monitors.
+    alt-ctrl-leftSquareBracket = '''exec-and-forget /bin/sh -c "$HOME/.config/aerospace/swap-workspace.sh prev"'''
+    alt-ctrl-rightSquareBracket = '''exec-and-forget /bin/sh -c "$HOME/.config/aerospace/swap-workspace.sh next"'''
+
     # Less common/destructive operations live in service mode.
     alt-shift-semicolon = 'mode service'
 
