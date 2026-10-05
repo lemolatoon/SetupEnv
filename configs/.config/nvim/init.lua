@@ -115,6 +115,9 @@ require("lazy").setup({
         -- Python: basedpyright + プロジェクト直下 .venv の自動使用
         ---------------------------------------------------
         vim.lsp.config("basedpyright", {
+          cmd = { "basedpyright-langserver", "--stdio" },
+          filetypes = { "python" },
+          root_markers = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git" },
           -- basedpyright ドキュメント準拠の settings 構造
           settings = {
             basedpyright = {
