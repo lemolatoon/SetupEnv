@@ -3,6 +3,8 @@
 -----------------------------------------------------------
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 local uv = vim.uv or vim.loop
+vim.g.clipboard = "osc52"
+vim.opt.clipboard = "unnamedplus"
 
 if not uv.fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
